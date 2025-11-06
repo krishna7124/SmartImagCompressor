@@ -7,7 +7,10 @@ import time
 st.set_page_config(page_title="Smart Image Compressor", page_icon="🗜️", layout="centered")
 
 st.title("🗜️ Smart Image Compressor")
-st.write("Upload single or multiple high-quality images and compress them efficiently. File sizes are shown in **KB**.")
+st.write(
+    "Upload single or multiple high-quality images (up to **1000 images**) and compress them efficiently. "
+    "File sizes are shown in **KB**."
+)
 
 # --- User Inputs ---
 quality = st.slider("Select Compression Quality (Lower = Smaller File)", 10, 95, 70)
@@ -16,6 +19,8 @@ uploaded_files = st.file_uploader(
     type=["jpg", "jpeg", "png", "webp"],
     accept_multiple_files=True
 )
+
+MAX_IMAGES = 1000  # user limit for multiple uploads
 
 # --- Function to Compress an Image ---
 def compress_image(file, quality_value):
@@ -28,6 +33,10 @@ def compress_image(file, quality_value):
 
 # --- Main Processing ---
 if uploaded_files:
+    if len(uploaded_files) > MAX_IMAGES:
+        st.error(f"❌ Too many files! Please upload up to {MAX_IMAGES} images at once.")
+        st.stop()
+
     st.info(f"Uploaded {len(uploaded_files)} image(s). Processing started...")
     progress_bar = st.progress(0)
     progress_text = st.empty()
@@ -60,8 +69,8 @@ if uploaded_files:
         progress_bar.progress(progress_percent / 100)
         progress_text.text(f"Progress: {progress_percent}% complete")
 
-        # Add small delay for smoothness (optional)
-        time.sleep(0.05)
+        # Small sleep for smooth update (optional)
+        time.sleep(0.02)
 
     progress_text.text("✅ Processing complete (100%)")
     current_status.empty()
@@ -71,8 +80,10 @@ if uploaded_files:
     if len(compressed_files) == 1:
         file = compressed_files[0]
         st.success(f"✅ Compressed: {file['name']}")
-        st.write(f"**Original:** {file['orig_kb']:.1f} KB → **Compressed:** {file['comp_kb']:.1f} KB "
-                 f"(**Saved:** {(1 - file['comp_kb']/file['orig_kb'])*100:.1f}%**)")
+        st.write(
+            f"**Original:** {file['orig_kb']:.1f} KB → **Compressed:** {file['comp_kb']:.1f} KB "
+            f"(**Saved:** {(1 - file['comp_kb']/file['orig_kb'])*100:.1f}%**)"
+        )
         st.download_button(
             label="⬇️ Download Compressed Image",
             data=file["buffer"],
